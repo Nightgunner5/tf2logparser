@@ -43,5 +43,59 @@ module.exports = {
       {end: new Date(2010, 8, 29, 19, 8, 58, 0)},
       {end: new Date(2010, 8, 29, 19, 8, 59, 0)}
     ]).should.equal(3);
+  },
+  
+  'config variables work as expected': function() {
+    var parser = LogParser.create();
+    parser.parseLine('L 01/01/1970 - 00:00:00: World triggered "Round_Start"'); // Needed to allow error checking (FIXME?)
+
+    parser.parseLine('L 04/01/2011 - 13:37:42: Saxton Hale joined the server!'); // Should not error, even though it's an invalid log line
+    parser.config.ignoreUnrecognizedLines = false;
+    var error = null;
+    try {
+      parser.parseLine('L 04/01/2011 - 13:37:42: Saxton Hale joined the server!');
+    } catch(ex) {
+      error = ex;
+    }
+    should.exist( error );
+
+    parser.parseLine('L 10/27/2010 - 21:19:47: "Numnutz<17><BOT><Red>" changed role to "medic"');
+    parser.getLog().players.should.eql([]);
+    parser.config.ignoreBots = false;
+    parser.parseLine('L 10/27/2010 - 21:19:47: "Numnutz<17><BOT><Red>" changed role to "medic"');
+    parser.getLog().players.should.eql([{
+      name: 'Numnutz',
+      userid: 17,
+      steamid: 'BOT:Numnutz',
+      team: 'Red',
+      roles: [{
+        key: 'medic',
+        name: 'Medic'
+      }],
+      damage: 0,
+      online: true,
+      kills: 0,
+      deaths: 0,
+      assists: 0,
+      longest_kill_streak: 0,
+      headshots: 0,
+      backstabs: 0,
+      pointCaptures: 0,
+      pointCaptureBlocks: 0,
+      flagDefends: 0,
+      flagCaptures: 0,
+      dominations: 0,
+      timesDominated: 0,
+      revenges: 0,
+      extinguishes: 0,
+      ubers: 0,
+      droppedUbers: 0,
+      healing: 0,
+      medPicksTotal: 0,
+      medPicksDroppedUber: 0,
+      items: {},
+      healSpread: [],
+      position: {}
+    }]);
   }
 }
